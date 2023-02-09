@@ -64,6 +64,10 @@ fn main() {
     let health_message = game.add_text("health_message", "Health: 5");
     health_message.translation = Vec2::new(555.0, 320.0);
 
+    game.window_settings(WindowDescriptor {
+        title: "Road race".to_string(),
+        ..Default::default()
+    });
     game.add_logic(game_logic);
     game.run(GameState {
         ..Default::default()
