@@ -5,6 +5,7 @@ use rusty_engine::prelude::*;
 struct GameState {
     marble_labels: Vec<String>,
     cars_left: i32,
+    score: i32,
     spawn_timer: Timer,
     is_end: bool,
 }
@@ -15,6 +16,7 @@ fn main() {
     let game_state = GameState {
         marble_labels: vec!["marble1".into(), "marble2".into(), "marble3".into()],
         cars_left: 25,
+        score: 0,
         spawn_timer: Timer::from_seconds(0.0, false),
         is_end: false,
     };
@@ -36,6 +38,9 @@ fn main() {
 
     let cars_left = game.add_text("cars left", format!("Cars left: {}", game_state.cars_left));
     cars_left.translation = Vec2::new(540.0, -320.0);
+
+    let score = game.add_text("score", format!("Score: {}", game_state.score));
+    score.translation = Vec2::new(-540.0, -320.0);
 
     game.add_logic(game_logic);
     game.run(game_state);
@@ -81,7 +86,7 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
         .filter(|sprite| sprite.label.starts_with("car"))
         .for_each(|car| car.translation.x += CAR_SPEED * engine.delta_f32);
 
-    // Clean up sprites that have fone off the screen
+    // Clean up sprites that have gone off the screen
     let mut labels_to_delete = Vec::new();
     for (label, sprite) in engine.sprites.iter() {
         if sprite.translation.y > 400.0 || sprite.translation.x > 750.0 {
@@ -158,7 +163,10 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
             engine.sprites.remove(&label);
             if label.starts_with("marble") {
                 game_state.marble_labels.push(label);
+                game_state.score += 1;
             }
+            let text = engine.texts.get_mut("score").unwrap();
+            text.value = format!("Score: {}", game_state.score);
             engine.audio_manager.play_sfx(SfxPreset::Confirmation1, 0.2);
         }
     }
@@ -166,6 +174,7 @@ fn game_logic(engine: &mut Engine, game_state: &mut GameState) {
 
 fn game_over(engine: &mut Engine, game_state: &mut GameState) {
     game_state.is_end = true;
+
     let game_over = engine.add_text("game over", "GAME OVER");
     game_over.font_size = 128.0;
     engine.audio_manager.stop_music();
